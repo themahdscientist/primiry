@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Mcp\Enums\Role;
 
 return new class extends Migration
 {
@@ -13,18 +15,31 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('avatar')->nullable();
+            $table->string('email')->unique()->nullable();
+            $table->timestamp('email_verified_at', 6)->nullable();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('nin', 11)->nullable()->index();
+            $table->string('original_avatar')->nullable();
+            $table->string('password')->nullable();
+            $table->string('phone');
+            $table->foreignIdFor(Role::class)->nullable()->index();
+            $table->enum('sex', ['male', 'female']);
+
+            $table->string('customer_code')->nullable()->index();
+            $table->json('auth')->nullable();
+            $table->timestamp('trial_ends_at', 6)->nullable();
+
             $table->rememberToken();
-            $table->timestamps();
+            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->timestamps(6);
+            $table->softDeletes(precision: 6);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
-            $table->timestamp('created_at')->nullable();
+            $table->timestamp('created_at', 6)->nullable();
         });
 
         Schema::create('sessions', function (Blueprint $table) {

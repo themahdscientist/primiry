@@ -20,17 +20,20 @@ class Dashboard extends BaseDashboard
 
     public function greetings(): Action
     {
-        $name = filament()->auth()->user()->name;
+        $user = auth()->user();
 
-        Notification::make('greetings')
-            ->title('Welcome back '.$name)
+        if (session()->has('greeted')) {
+            return Action::make('greetings');
+        }
+
+        Notification::make()
+            ->title("Welcome back, {$user->name}!")
+            ->body('We hope you have a great day using our application.')
             ->success()
-            // ->status()
-            // ->iconColor()
-            // ->color()
-            ->icon(Heroicon::User)
-            // ? get an icon that's waving.
+            ->persistent()
             ->send();
+
+        session()->put('greeted', true);
 
         return Action::make('greetings');
     }
