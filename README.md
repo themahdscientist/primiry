@@ -18,6 +18,7 @@
 - look for what scopedUnique actually improves in ur data retrieval.
 - there are many filament methods u need to apply on tables and forms and even in a service provider; check documentation.
 
+- [backend] change the settings table to schools .. use the schools table as tenancy and hook everything up! MOST PARAMOUNT!
 - [frontend] add a column showing the amount of wards a guardian has
 - [backend] the student's admission should be a series of numbers w components from things that increment like the current timestamp and maybe a randomly generated number.
 - [fullstack] add buttons to assign subjects to particular grades in both subjects and grades tables and their functionalities [copilot]; also add the subject counts to the particular grades.

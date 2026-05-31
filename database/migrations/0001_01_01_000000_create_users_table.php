@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,12 +27,8 @@ return new class extends Migration
             $table->foreignIdFor(Role::class)->nullable()->index();
             $table->enum('sex', ['male', 'female']);
 
-            $table->string('customer_code')->nullable()->index();
-            $table->json('auth')->nullable();
-            $table->timestamp('trial_ends_at', 6)->nullable();
-
             $table->rememberToken();
-            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });
