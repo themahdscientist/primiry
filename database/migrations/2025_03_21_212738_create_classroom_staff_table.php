@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Classroom;
-use App\Models\Staff;
 use App\Models\School;
+use App\Models\Staff;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

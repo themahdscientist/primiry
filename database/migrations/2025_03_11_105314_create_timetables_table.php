@@ -2,8 +2,8 @@
 
 use App\Models\Classroom;
 use App\Models\Day;
-use App\Models\Subject;
 use App\Models\School;
+use App\Models\Subject;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

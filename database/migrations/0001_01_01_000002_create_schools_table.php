@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('code')->unique(); // business identifier used in URLs and lookups
             $table->string('domain')->nullable()->index(); // custom domain or subdomain for tenant resolution
-            
+
             /*
              * settings (JSON): store non-relational, infrequently queried data to keep table compact.
              * Suggested keys to store here (examples):
@@ -31,7 +31,7 @@ return new class extends Migration
             $table->json('settings')->nullable();
             $table->json('auth')->nullable();
             $table->enum('status', ['active', 'suspended', 'closed'])->default('active');
-            
+
             $table->foreignIdFor(User::class, 'owner_user_id')->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
