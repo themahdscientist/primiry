@@ -1,7 +1,7 @@
 <?php
 
+use App\Models\School;
 use App\Models\Staff;
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -34,12 +34,13 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamp('end_date', 6);
             $table->json('meeting_methods');
-            $table->string('name')->unique();
+            $table->string('name');
             $table->foreignIdFor(Staff::class, 'year_head_id')->nullable()->constrained()->nullOnDelete();
 
             $table->timestamp('start_date', 6);
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->unique(['school_id', 'name']);
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

@@ -3,6 +3,7 @@
 use App\Models\Classroom;
 use App\Models\Country;
 use App\Models\Guardian;
+use App\Models\School;
 use App\Models\State;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -18,7 +19,7 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->string('admission_number')->unique();
+            $table->string('admission_number');
             $table->enum('blood_group', ['a', 'b', 'ab', 'o']);
             $table->string('city_of_residence');
             $table->foreignIdFor(Classroom::class)->nullable()->constrained()->nullOnDelete();
@@ -36,6 +37,8 @@ return new class extends Migration
             $table->enum('type', ['boarding', 'day']);
 
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->unique(['school_id', 'admission_number']);
             $table->timestamp('graduated_at', 6)->nullable();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);

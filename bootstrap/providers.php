@@ -1,9 +1,15 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\DbGrammarServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
+use App\Providers\FilamentPanelServiceProvider;
+use App\Providers\FortifyServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
-    App\Providers\FortifyServiceProvider::class,
-    App\Providers\DbGrammarServiceProvider::class,
-    App\Providers\FilamentPanelServiceProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
+    FortifyServiceProvider::class,
+    DbGrammarServiceProvider::class,
+    FilamentPanelServiceProvider::class,
 ];

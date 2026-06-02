@@ -1,9 +1,9 @@
 <?php
 
 use App\Models\Grade;
+use App\Models\School;
 use App\Models\Section;
 use App\Models\Staff;
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -23,8 +23,7 @@ return new class extends Migration
             $table->foreignIdFor(Grade::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Section::class)->constrained()->cascadeOnDelete();
             $table->enum('status', ['active', 'inactive'])->default('active');
-
-            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

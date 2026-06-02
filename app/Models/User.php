@@ -3,11 +3,6 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Guardian;
-use App\Models\Role;
-use App\Models\Setting;
-use App\Models\Staff;
-use App\Models\Student;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
@@ -28,10 +23,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser, FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable, SoftDeletes;
+    use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -141,9 +136,9 @@ class User extends Authenticatable implements PasskeyUser, FilamentUser, HasAvat
         return $this->hasOne(Guardian::class);
     }
 
-    public function setting(): HasOne
+    public function school(): HasOne
     {
-        return $this->hasOne(Setting::class);
+        return $this->hasOne(School::class, 'owner_user_id');
     }
 
     public function staff(): HasOne

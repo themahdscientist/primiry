@@ -29,7 +29,7 @@ class AssignSubjects extends CreateRecord
         return $schema
             ->components([
                 Sidebar::make([
-                    
+
                 ], [])
                     ->columnSpanFull(),
             ]);

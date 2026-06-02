@@ -22,19 +22,19 @@ class Day extends Model
         ['id' => self::SATURDAY, 'name' => 'saturday'],
     ];
 
-    const SUNDAY = 1;
+    public const int SUNDAY = 1;
 
-    const MONDAY = 2;
+    public const int MONDAY = 2;
 
-    const TUESDAY = 3;
+    public const int TUESDAY = 3;
 
-    const WEDNESDAY = 4;
+    public const int WEDNESDAY = 4;
 
-    const THURSDAY = 4;
+    public const int THURSDAY = 5;
 
-    const FRIDAY = 4;
+    public const int FRIDAY = 6;
 
-    const SATURDAY = 4;
+    public const int SATURDAY = 7;
 
     public function timetables(): HasMany
     {

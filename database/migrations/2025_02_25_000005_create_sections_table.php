@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\School;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,11 +14,11 @@ return new class extends Migration
     {
         Schema::create('sections', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-
-            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->unique(['school_id', 'name']);
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

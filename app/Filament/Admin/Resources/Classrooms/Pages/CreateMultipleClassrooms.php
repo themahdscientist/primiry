@@ -46,21 +46,21 @@ class CreateMultipleClassrooms extends CreateRecord
                                 ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
                                 ->hintIconTooltip(__('This field is automatically generated based on the selected grade and section.'))
                                 ->disabledOn(Operation::Create->value)
-                                ->required(fn(string $operation) => $operation !== Operation::Create->value),
+                                ->required(fn (string $operation) => $operation !== Operation::Create->value),
                             TextInput::make('capacity')
                                 ->integer()
                                 ->required(),
                             Select::make('grades')
                                 ->label(__('Grades'))
                                 ->multiple()
-                                ->options(fn() => Grade::all()->pluck('name', 'id'))
+                                ->options(fn () => Grade::all()->pluck('name', 'id'))
                                 ->preload()
                                 ->searchable()
                                 ->required(),
                             Select::make('sections')
                                 ->label(__('Sections'))
                                 ->multiple()
-                                ->options(fn() => \App\Models\Section::all()->pluck('name', 'id'))
+                                ->options(fn () => \App\Models\Section::all()->pluck('name', 'id'))
                                 ->preload()
                                 ->searchable()
                                 ->required(),
@@ -77,10 +77,10 @@ class CreateMultipleClassrooms extends CreateRecord
                                     }
 
                                     return $query
-                                        ->whereHas('user', fn(Builder $q) => $q->where('role_id', Role::STAFF))
+                                        ->whereHas('user', fn (Builder $q) => $q->where('role_id', Role::STAFF))
                                         ->with('user');
                                 })
-                                ->getOptionLabelFromRecordUsing(fn(Staff $record) => $record->user->name)
+                                ->getOptionLabelFromRecordUsing(fn (Staff $record) => $record->user->name)
                                 // ->getOptionLabelUsing(fn(?Classroom $record) => $record?->formTeacher->user->name)
                                 ->preload()
                                 ->searchable(),
@@ -124,7 +124,7 @@ class CreateMultipleClassrooms extends CreateRecord
                 if ($formTeacher) {
                     $classroom->formTeacher()->associate($formTeacher);
                 } else {
-                    if (!$classroom->exists) {
+                    if (! $classroom->exists) {
                         $classroom->form_teacher_id = null;
                     }
                 }

@@ -61,7 +61,7 @@ class GradeForm
                                         ->with('user');
                                 })
                                 ->getOptionLabelFromRecordUsing(fn (Staff $record) => $record->user->name)
-                                ->getOptionLabelUsing(fn(?Grade $record, mixed $state) => $record?->yearHead->user->name ?? $state)
+                                ->getOptionLabelUsing(fn (?Grade $record, mixed $state) => $record?->yearHead->user->name ?? $state)
                                 ->preload()
                                 ->searchable(),
                             DatePicker::make('start_date')

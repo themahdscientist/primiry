@@ -1,11 +1,9 @@
 <?php
 
-use App\Models\School;
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Mcp\Enums\Role;
+use App\Models\Role;
 
 return new class extends Migration
 {
@@ -28,7 +26,6 @@ return new class extends Migration
             $table->enum('sex', ['male', 'female']);
 
             $table->rememberToken();
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

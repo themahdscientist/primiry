@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\School;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,11 +20,12 @@ return new class extends Migration
             $table->integer('quantity')->nullable();
             $table->string('status')->index();
             $table->timestamp('starts_at', 6)->nullable();
-            $table->string('subscription_code')->unique();
+            $table->string('subscription_code');
             $table->timestamp('trial_ends_at', 6)->nullable();
             $table->string('type');
 
-            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->unique(['school_id', 'subscription_code']);
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

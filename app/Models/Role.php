@@ -38,11 +38,11 @@ class Role extends Model
         return $this->hasMany(User::class);
     }
 
-    const ADMIN = 1;
+    public const int ADMIN = 1;
 
-    const STUDENT = 2;
+    public const int STUDENT = 2;
 
-    const STAFF = 3;
+    public const int STAFF = 3;
 
-    const GUARDIAN = 4;
+    public const int GUARDIAN = 4;
 }
