@@ -7,15 +7,21 @@ use App\Filament\Admin\Resources\Classrooms\ClassroomResource;
 use App\Models\Classroom;
 use App\Models\Grade;
 use App\Models\Role;
+use App\Models\Section as SchoolSection;
 use App\Models\Staff;
+use Closure;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Operation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 use RalphJSmit\Filament\Components\Forms\Sidebar;
 
 class CreateMultipleClassrooms extends CreateRecord
@@ -42,48 +48,73 @@ class CreateMultipleClassrooms extends CreateRecord
                     Section::make()
                         ->columns()
                         ->schema([
-                            TextInput::make('name')
-                                ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
-                                ->hintIconTooltip(__('This field is automatically generated based on the selected grade and section.'))
-                                ->disabledOn(Operation::Create->value)
-                                ->required(fn (string $operation) => $operation !== Operation::Create->value),
-                            TextInput::make('capacity')
-                                ->integer()
-                                ->required(),
                             Select::make('grades')
                                 ->label(__('Grades'))
                                 ->multiple()
-                                ->options(fn () => Grade::all()->pluck('name', 'id'))
+                                ->options(fn() => Grade::all()->pluck('name', 'id'))
                                 ->preload()
                                 ->searchable()
+                                ->live()
+                                ->afterStateUpdated(fn(Set $set): mixed => $set('sections', []))
+                                ->rules(fn(Get $get): array => [
+                                    function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                        if (
+                                            $this->hasExistingClassrooms(
+                                                (array) $value,
+                                                (array) $get('sections'),
+                                            )
+                                        ) {
+                                            $fail('One or more selected grade and section combinations already have a classroom.');
+                                        }
+                                    },
+                                ])
                                 ->required(),
                             Select::make('sections')
                                 ->label(__('Sections'))
                                 ->multiple()
-                                ->options(fn () => \App\Models\Section::all()->pluck('name', 'id'))
+                                ->options(function (Get $get): array {
+                                    $gradeIds = (array) $get('grades');
+
+                                    return SchoolSection::query()
+                                        ->when(
+                                            blank($gradeIds),
+                                            fn(Builder $query): Builder => $query->whereKey([]),
+                                            fn(Builder $query): Builder => $query->whereDoesntHave(
+                                                'classrooms',
+                                                fn(Builder $classrooms): Builder => $classrooms
+                                                    ->whereIn('grade_id', $gradeIds)
+                                                    ->where('status', GeneralStatus::Active->value),
+                                            ),
+                                        )
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id')
+                                        ->all();
+                                })
+                                ->disabled(fn(Get $get): bool => blank($get('grades')))
                                 ->preload()
                                 ->searchable()
+                                ->required(),
+                            TextInput::make('name')
+                                ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
+                                ->hintIconTooltip(__('This field is automatically generated based on the selected grade and section.'))
+                                ->disabledOn(Operation::Create->value)
+                                ->required(fn(string $operation) => $operation !== Operation::Create->value),
+                            TextInput::make('capacity')
+                                ->integer()
                                 ->required(),
                             Select::make('status')
                                 ->options(GeneralStatus::class)
                                 ->required()
                                 ->default(GeneralStatus::Active)
+                                ->disabled()
+                                ->saved()
                                 ->native(false),
                             Select::make('form_teacher_id')
                                 ->label(__('Form teacher'))
-                                ->relationship('formTeacher', 'id', function (Builder $query, ?Classroom $record) {
-                                    if ($record?->form_teacher_id) {
-                                        $query->where('staff.id', '!=', $record->form_teacher_id);
-                                    }
-
-                                    return $query
-                                        ->whereHas('user', fn (Builder $q) => $q->where('role_id', Role::STAFF))
-                                        ->with('user');
-                                })
-                                ->getOptionLabelFromRecordUsing(fn (Staff $record) => $record->user->name)
-                                // ->getOptionLabelUsing(fn(?Classroom $record) => $record?->formTeacher->user->name)
-                                ->preload()
-                                ->searchable(),
+                                ->relationship('formTeacher', 'id')
+                                ->getOptionLabelFromRecordUsing(fn(Staff $record) => $record->user->name)
+                                ->searchable()
+                                ->preload(),
                         ])
                         ->columnSpanFull(),
                 ], [])
@@ -96,12 +127,19 @@ class CreateMultipleClassrooms extends CreateRecord
         $gradeIds = (array) ($data['grades'] ?? []);
         $sectionIds = (array) ($data['sections'] ?? []);
 
+        $status = GeneralStatus::Active->value;
+
+        if ($this->hasExistingClassrooms($gradeIds, $sectionIds, $status)) {
+            throw ValidationException::withMessages([
+                'grades' => 'One or more selected grade and section combinations already have a classroom.',
+            ]);
+        }
+
         $capacity = $data['capacity'] ?? null;
-        $status = $data['status'] ?? null;
         $formTeacherId = $data['form_teacher_id'] ?? null;
 
         $grades = Grade::query()->whereIn('id', $gradeIds)->get()->keyBy('id');
-        $sections = \App\Models\Section::query()->whereIn('id', $sectionIds)->get()->keyBy('id');
+        $sections = SchoolSection::query()->whereIn('id', $sectionIds)->get()->keyBy('id');
         $formTeacher = $formTeacherId ? Staff::find($formTeacherId) : null;
 
         $last = null;
@@ -124,7 +162,7 @@ class CreateMultipleClassrooms extends CreateRecord
                 if ($formTeacher) {
                     $classroom->formTeacher()->associate($formTeacher);
                 } else {
-                    if (! $classroom->exists) {
+                    if (!$classroom->exists) {
                         $classroom->form_teacher_id = null;
                     }
                 }
@@ -140,5 +178,18 @@ class CreateMultipleClassrooms extends CreateRecord
         }
 
         return $last ?? new ($this->getModel())();
+    }
+
+    /**
+     * @param  array<int, int|string>  $gradeIds
+     * @param  array<int, int|string>  $sectionIds
+     */
+    private function hasExistingClassrooms(array $gradeIds, array $sectionIds): bool
+    {
+        return Classroom::query()
+            ->whereIn('grade_id', $gradeIds)
+            ->whereIn('section_id', $sectionIds)
+            ->where('status', GeneralStatus::Active->value)
+            ->exists();
     }
 }

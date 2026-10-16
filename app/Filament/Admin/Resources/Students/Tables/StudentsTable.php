@@ -6,6 +6,7 @@ use App\Enums\Sex;
 use App\Enums\StudentStatus;
 use App\Enums\StudentType;
 use App\Filament\Admin\Resources\Guardians\GuardianResource;
+use App\Models\Student;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -15,6 +16,7 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -31,47 +33,57 @@ class StudentsTable
                 TextColumn::make('index')
                     ->label('')
                     ->rowIndex(),
-                ImageColumn::make('avatar')
-                    ->label('Profile picture')
-                    ->circular()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('name')
+                ImageColumn::make('user.avatar')
+                    ->label('Avatar')
+                    ->disk('public')
+                    ->circular(),
+                TextColumn::make('user.name')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('student.admission_number')
-                    ->label('Admission number')
+                TextColumn::make('admission_number')
                     ->searchable()
-                    ->formatStateUsing(fn (string $state): string => strtoupper($state)),
-                TextColumn::make('student.dob')
+                    ->formatStateUsing(fn(string $state): string => strtoupper($state)),
+                TextColumn::make('dob')
                     ->label('DOB')
                     ->sortable()
                     ->date(),
-                TextColumn::make('sex'),
-                TextColumn::make('student.classroom.name')
+                TextColumn::make('user.sex')
+                    ->label('Sex'),
+                TextColumn::make('classroom.name')
                     ->searchable(),
-                TextColumn::make('student.guardian.user.name')
+                TextColumn::make('type')
+                    ->label('Type'),
+                /**
+                 * check the iconcolumn docs
+                 * there are fluent ways to do this better
+                 */
+                IconColumn::make('status')
+                    ->label('Status')
+                    ->icon(fn(string $state): string => StudentStatus::from($state)->getIcon())
+                    ->color(fn(string $state): string => StudentStatus::from($state)->getColor())
+                    ->tooltip(fn(string $state): string => StudentStatus::from($state)->getLabel())
+                    ->sortable(),
+                TextColumn::make('guardian.user.name')
                     ->label('Guardian')
                     ->searchable()
-                    ->url(fn (User $record) => $record->student->guardian->user ? GuardianResource::getUrl('view', [$record->student->guardian->user]) : null)
+                    ->url(fn(Student $record) => $record->guardian ? GuardianResource::getUrl('view', [$record->guardian]) : null)
                     ->emptyTooltip('A guardian  hasn\'t been assigned yet.')
                     ->placeholder('-'),
-                TextColumn::make('email')
+                TextColumn::make('user.email')
+                    ->label('Email')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('nin')
+                TextColumn::make('user.nin')
                     ->label('NIN')
                     ->placeholder('-')
                     ->emptyTooltip('Click to link NIN.')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                PhoneColumn::make('phone')
+                PhoneColumn::make('user.phone')
+                    ->label('Phone')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('student.status')
-                    ->label('Status')
-                    ->searchable(),
-                TextColumn::make('student.type')
-                    ->label('Type'),
             ])
             ->filters([
                 TrashedFilter::make()

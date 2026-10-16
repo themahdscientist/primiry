@@ -36,8 +36,8 @@ return new class extends Migration
             $table->enum('status', ['active', 'suspended', 'expelled', 'graduated'])->default('active');
             $table->enum('type', ['boarding', 'day']);
 
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->unique(['school_id', 'admission_number']);
             $table->timestamp('graduated_at', 6)->nullable();
             $table->timestamps(6);

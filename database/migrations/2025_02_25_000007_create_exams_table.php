@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('notes')->nullable();
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

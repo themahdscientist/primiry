@@ -7,11 +7,19 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Arr;
 
-use function count;
-
 class ViewGuardian extends ViewRecord
 {
     protected static string $resource = GuardianResource::class;
+
+    protected static array $userEditableAttributes = [
+        'name',
+        'nin',
+        'email',
+        'phone',
+        'sex',
+        'avatar',
+        'original_avatar',
+    ];
 
     protected function getHeaderActions(): array
     {
@@ -22,12 +30,15 @@ class ViewGuardian extends ViewRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['guardian'] = $this->getRecord()->guardian->attributesToArray();
+        $data['user'] = Arr::only(
+            $this->getRecord()->user->attributesToArray(),
+            static::$userEditableAttributes,
+        );
 
-        $nameParts = explode(' ', $data['name'] ?? '');
-        $data['first_name'] = $nameParts[0] ?? null;
-        $data['last_name'] = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : null;
+        $nameParts = preg_split('/\s+/', trim($data['user']['name'] ?? ''), 2) ?: [];
+        $data['user']['first_name'] = $nameParts[0] ?? null;
+        $data['user']['last_name'] = $nameParts[1] ?? null;
 
-        return $data = Arr::except($data, 'name');
+        return $data;
     }
 }

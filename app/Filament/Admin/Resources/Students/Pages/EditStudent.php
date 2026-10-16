@@ -27,36 +27,31 @@ class EditStudent extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['student'] = $this->getRecord()->student->attributesToArray();
+        $data['user'] = $this->getRecord()->user->attributesToArray();
 
-        $nameParts = explode(' ', $data['name'] ?? '');
-        $data['first_name'] = $nameParts[0] ?? null;
-        $data['middle_name'] = count($nameParts) > 2 ? implode(' ', array_slice($nameParts, 1, -1)) : null;
-        $data['last_name'] = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : null;
+        $nameParts = preg_split('/\s+/', trim($data['user']['name'] ?? ''), 3) ?: [];
+        $data['user']['first_name'] = $nameParts[0] ?? null;
+        $data['user']['middle_name'] = $nameParts[1] ?? null;
+        $data['user']['last_name'] = $nameParts[2] ?? null;
 
-        return $data = Arr::except($data, 'name');
+        return $data;
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $nameParts = array_filter([
-            $data['first_name'] ?? null,
-            $data['middle_name'] ?? null,
-            $data['last_name'] ?? null,
-        ], fn ($v) => $v !== null && trim((string) $v) !== '');
+        $data['user']['name'] = trim(implode(' ', [
+            $data['user']['first_name'],
+            $data['user']['middle_name'],
+            $data['user']['last_name'],
+        ]));
 
-        $data['name'] = implode(' ', $nameParts);
-
-        return $data = Arr::except($data, ['first_name', 'middle_name', 'last_name']);
+        return $data;
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return $record = parent::handleRecordUpdate($record, Arr::except($data, 'student'));
-    }
+        $record->user->update($data['user']);
 
-    protected function afterSave(): void
-    {
-        $this->getRecord()->student()->update($this->form->getState()['student']);
+        return parent::handleRecordUpdate($record, Arr::except($data, 'user'));
     }
 }

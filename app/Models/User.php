@@ -6,24 +6,28 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'sex', 'nin', 'avatar', 'original_avatar'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasAvatar, PasskeyUser
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasTenants, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
@@ -95,6 +99,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, PasskeyUs
         }
     }
 
+    public function schools(): BelongsToMany
+    {
+        return $this->belongsToMany(School::class);
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->schools;
+    }
+
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->schools()->whereKey($tenant)->exists();
+    }
+
     public function getFilamentAvatarUrl(): ?string
     {
         return null;
@@ -114,15 +133,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, PasskeyUs
     //     return $this->setting->kyc === 'verified';
     // }
 
-    public function getDefaultCountry(): string
-    {
-        return $this->load('setting')->setting->sch_country;
-    }
+    // public function getDefaultCountry(): string
+    // {
+    //     return $this->load('setting')->setting->sch_country;
+    // }
 
-    public function getDefaultState(): string
-    {
-        return $this->load('setting')->setting->sch_state;
-    }
+    // public function getDefaultState(): string
+    // {
+    //     return $this->load('setting')->setting->sch_state;
+    // }
 
     // Roles
 
@@ -134,11 +153,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, PasskeyUs
     public function guardian(): HasOne
     {
         return $this->hasOne(Guardian::class);
-    }
-
-    public function school(): HasOne
-    {
-        return $this->hasOne(School::class, 'owner_user_id');
     }
 
     public function staff(): HasOne

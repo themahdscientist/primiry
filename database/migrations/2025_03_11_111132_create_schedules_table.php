@@ -26,7 +26,7 @@ return new class extends Migration
             $table->time('start_time', 6);
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
 
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

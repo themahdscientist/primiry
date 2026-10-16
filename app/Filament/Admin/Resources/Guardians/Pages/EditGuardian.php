@@ -10,8 +10,6 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
-use function count;
-
 class EditGuardian extends EditRecord
 {
     protected static string $resource = GuardianResource::class;
@@ -27,33 +25,29 @@ class EditGuardian extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['guardian'] = $this->getRecord()->guardian->attributesToArray();
+        $data['user'] = $this->getRecord()->user->attributesToArray();
 
-        $nameParts = explode(' ', $data['name'] ?? '');
-        $data['first_name'] = $nameParts[0] ?? null;
-        $data['last_name'] = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : null;
+        $nameParts = preg_split('/\s+/', trim($data['user']['name'] ?? ''), 2) ?: [];
+        $data['user']['first_name'] = $nameParts[0] ?? null;
+        $data['user']['last_name'] = $nameParts[1] ?? null;
 
-        return $data = Arr::except($data, 'name');
+        return $data;
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['name'] = $data['first_name'].' '.$data['last_name'];
-
-        $data = Arr::except($data, ['first_name', 'last_name']);
+        $data['user']['name'] = trim(implode(' ', [
+            $data['user']['first_name'],
+            $data['user']['last_name'],
+        ]));
 
         return $data;
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        $record = parent::handleRecordUpdate($record, Arr::except($data, 'guardian'));
+        $record->user->update($data['user']);
 
-        return $record;
-    }
-
-    protected function afterSave(): void
-    {
-        $this->getRecord()->guardian()->update($this->form->getState()['guardian']);
+        return parent::handleRecordUpdate($record, Arr::except($data, 'user'));
     }
 }

@@ -9,6 +9,8 @@ use App\Models\Role;
 use App\Models\Staff;
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Operation;
 use Illuminate\Validation\Rules\Unique;
 use Nette\Utils\Random;
 use RalphJSmit\Filament\Components\Forms\CreatedAt;
@@ -35,21 +38,25 @@ class StaffForm
                         ->columnSpanFull()
                         ->schema([
                             Section::make([
-                                TextInput::make('first_name')
+                                TextInput::make('user.first_name')
                                     ->required()
                                     ->maxLength(85)
                                     ->autofocus(),
-                                TextInput::make('last_name')
+                                TextInput::make('user.last_name')
                                     ->required()
                                     ->maxLength(85),
-                                TextInput::make('nin')
+                                TextInput::make('user.nin')
                                     ->label(__('NIN'))
                                     ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
                                     ->hintIconTooltip(__('National Identification Number (11 digits)'))
                                     ->length(11)
                                     ->numeric()
-                                    // ->unique(User::class, 'nin', modifyRuleUsing: fn(Unique $rule) => $rule->where('role_id', Role::STAFF)) this scope's the search to only staff [unnecessary]
-                                    ->unique(User::class, 'nin')
+                                    /**
+                                     * scopes don't work even with scopedUnique.
+                                     * i can't create the same records if i have one soft-deleted or in another school (tenant).
+                                     * fix it
+                                     */
+                                    ->scopedUnique(User::class, 'nin', fn(?Staff $record): ?User => $record?->user)
                                     ->extraInputAttributes([
                                         'inputmode' => 'numeric',
                                         'pattern' => '[0-9]*',
@@ -58,7 +65,7 @@ class StaffForm
                                     ->validationMessages(['unique' => 'This :attribute belongs to another.'])
                                     ->required()
                                     ->afterStateUpdated(
-                                        fn ($state, $get) => null// verify nin
+                                        fn($state, $get) => null// verify nin
                                     )
                                     ->suffixAction(
                                         Action::make('verify')
@@ -66,55 +73,55 @@ class StaffForm
                                             ->iconButton()
                                             ->tooltip('Verify NIN')
                                             ->action(
-                                                fn ($state, $get) => static::verifyNIN($state, $get)
+                                                fn($state, $get) => static::verifyNIN($state, $get)
                                             )
                                     ),
                             ]),
                             Section::make([
-                                TextInput::make('email')
+                                TextInput::make('user.email')
                                     ->email()
                                     ->label(__('resources/pages/create-record.form.email.label'))
                                     ->required()
                                     ->maxLength(255)
-                                    ->unique(User::class, 'email'),
-                                PhoneInput::make('phone')
+                                    ->scopedUnique(User::class, 'email', fn(?Staff $record): ?User => $record?->user),
+                                PhoneInput::make('user.phone')
                                     ->label(__('resources/pages/create-record.form.phone.label'))
                                     ->prefixIcon('heroicon-s-phone')
-                                    ->defaultCountry(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->defaultCountry(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->autoPlaceholder('aggressive')
                                     ->strictMode()
                                     ->required(),
-                                Select::make('sex')
+                                Select::make('user.sex')
                                     ->options(Sex::class)
                                     ->required()
                                     ->native(false),
                             ]),
                             Section::make([
-                                TextInput::make('staff.code')
-                                    ->default(fn () => strtoupper(Random::generate()))
+                                TextInput::make('code')
+                                    ->default(fn() => strtoupper(Random::generate()))
                                     ->disabled()
-                                    ->dehydrated(fn (string $operation): bool => $operation === 'create')
-                                    ->dehydrateStateUsing(fn (string $state): string => strtolower($state))
-                                    ->formatStateUsing(fn (string $state): string => strtoupper($state))
-                                    ->unique(Staff::class, 'code', modifyRuleUsing: fn (Unique $rule, ?User $record) => $rule->ignore($record?->id, 'user_id'))
+                                    ->dehydrated(fn(string $operation): bool => $operation === Operation::Create->value)
+                                    ->dehydrateStateUsing(fn(string $state): string => strtolower($state))
+                                    ->formatStateUsing(fn(string $state): string => strtoupper($state))
+                                    ->scopedUnique()
                                     ->required(),
-                                Select::make('staff.marital_status')
+                                Select::make('marital_status')
                                     ->options(MaritalStatus::class)
                                     ->required()
                                     ->native(false),
-                                PhoneInput::make('staff.emergency_contact')
+                                PhoneInput::make('emergency_contact')
                                     ->label(__('resources/pages/create-staff.form.emergency-contact.label'))
                                     ->prefixIcon('heroicon-s-phone')
-                                    ->defaultCountry(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->defaultCountry(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->autoPlaceholder('aggressive')
                                     ->strictMode()
                                     ->required(),
                             ]),
                             Section::make()
                                 ->schema([
-                                    TextInput::make('staff.bank_account_details.account_name')
+                                    TextInput::make('bank_account_details.account_name')
                                         ->required(),
-                                    TextInput::make('staff.bank_account_details.account_number')
+                                    TextInput::make('bank_account_details.account_number')
                                         ->numeric()
                                         ->label(__('resources/pages/create-staff.form.account-number.label'))
                                         ->hintIcon(__('resources/pages/create-staff.form.account-number.icon.name'))
@@ -126,7 +133,7 @@ class StaffForm
                                             'pattern' => '[0-9]*',
                                         ])
                                         ->required(),
-                                    Select::make('staff.bank_account_details.bank_name')
+                                    Select::make('bank_account_details.bank_name')
                                         ->options([
                                             'first_bank' => 'FirstBank of Nigeria',
                                         ])
@@ -135,11 +142,11 @@ class StaffForm
                                 ]),
                             Section::make()
                                 ->schema([
-                                    TextInput::make('staff.salary')
+                                    TextInput::make('salary')
                                         ->numeric()
-                                        ->formatStateUsing(fn (mixed $state) => $state) // typecasting (decimal is having problem with displaying more than 255 characters when the "." character is trailing the number)
+                                        ->formatStateUsing(fn(mixed $state) => $state) // typecasting (decimal is having problem with displaying more than 255 characters when the "." character is trailing the number)
                                         ->required(),
-                                    Select::make('staff.employment_type')
+                                    Select::make('employment_type')
                                         ->options(EmploymentType::class)
                                         ->default(EmploymentType::FullTime)
                                         ->required()
@@ -154,9 +161,9 @@ class StaffForm
                     ])
                         ->columnSpanFull(),
                     Section::make([
-                        FileUpload::make('avatar')
+                        FileUpload::make('user.avatar')
                             ->image()
-                            ->previewable(fn (string $operation) => $operation === 'edit' || $operation === 'view')
+                            ->previewable(fn(string $operation) => $operation === 'edit' || $operation === 'view')
                             ->label(__('resources/pages/create-record.form.avatar.label'))
                             ->hintIcon(__('resources/pages/create-record.form.avatar.icon.name'))
                             ->hintIconTooltip(__('resources/pages/create-record.form.avatar.icon.text'))
@@ -167,8 +174,8 @@ class StaffForm
                             ->fetchFileInformation(true)
                             ->maxSize(1024)
                             ->maxFiles(1)
-                            ->dehydrated(fn ($state) => $state != null),
-                        FileUpload::make('staff.qualifications')
+                            ->dehydrated(fn($state) => $state != null),
+                        FileUpload::make('qualifications')
                             ->previewable(false)
                             ->label(__('resources/pages/create-staff.form.qualifications.label'))
                             ->hintIcon(__('resources/pages/create-staff.form.qualifications.icon.name'))
@@ -181,7 +188,15 @@ class StaffForm
                             ->maxFiles(2)
                             ->maxParallelUploads(2)
                             ->multiple()
-                            ->dehydrated(fn ($state) => $state != null),
+                            ->dehydrated(fn($state) => $state != null),
+                        // this does not assign the tenant id to the pivot table. fix this.
+                        CheckboxList::make('subjects')
+                            ->relationship(titleAttribute: 'name')
+                            ->searchable()
+                            ->live(condition: false)
+                            ->columns()
+                            ->bulkToggleable()
+                            ->columnSpanFull(),
                     ])
                         ->columnSpanFull(),
                 ])

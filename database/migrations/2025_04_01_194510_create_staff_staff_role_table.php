@@ -18,7 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Staff::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(StaffRole::class)->nullable()->index();
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
         });
     }

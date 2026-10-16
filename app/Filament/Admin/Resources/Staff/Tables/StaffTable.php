@@ -27,29 +27,34 @@ class StaffTable
                 TextColumn::make('index')
                     ->label('')
                     ->rowIndex(),
-                ImageColumn::make('avatar')
-                    ->label('Profile picture')
-                    ->circular()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('name')
+                ImageColumn::make('user.avatar')
+                    ->label('Avatar')
+                    ->disk('public')
+                    ->circular(),
+                TextColumn::make('user.name')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('staff.code')
+                TextColumn::make('code')
                     ->label('ID')
                     ->searchable()
                     ->formatStateUsing(fn (string $state): string => strtoupper($state)),
-                TextColumn::make('email')
+                TextColumn::make('user.email')
+                    ->label('Email')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.sex')
+                    ->label('Sex'),
+                PhoneColumn::make('user.phone')
+                    ->label('Phone')
                     ->searchable(),
-                TextColumn::make('sex'),
-                PhoneColumn::make('phone')
-                    ->searchable(),
-                TextColumn::make('nin')
+                TextColumn::make('user.nin')
                     ->label('NIN')
                     ->searchable(),
-                TextColumn::make('staff.employment_type')
+                TextColumn::make('employment_type')
                     ->label('Employment type')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('staff.salary')
+                TextColumn::make('salary')
                     ->label('Salary')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

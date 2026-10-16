@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Classrooms\Tables;
 
 use App\Enums\GeneralStatus;
+use App\Filament\Admin\Resources\Classrooms\ClassroomResource;
 use App\Models\Classroom;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -10,7 +11,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -40,10 +40,13 @@ class ClassroomsTable
                     ->searchable()
                     ->placeholder('-')
                     ->emptyTooltip('A form teacher hasn\'t been assigned yet.'),
+                TextColumn::make('subjects_count')
+                ->label('Subjects')
+                    ->counts('subjects'),
                 IconColumn::make('status')
-                    ->icon(fn (Classroom $record): string => GeneralStatus::from($record->status)->getIcon())
-                    ->color(fn (Classroom $record): string => GeneralStatus::from($record->status)->getColor())
-                    ->tooltip(fn (Classroom $record): string => GeneralStatus::from($record->status)->getLabel()),
+                    ->icon(fn(Classroom $record): string => GeneralStatus::from($record->status)->getIcon())
+                    ->color(fn(Classroom $record): string => GeneralStatus::from($record->status)->getColor())
+                    ->tooltip(fn(Classroom $record): string => GeneralStatus::from($record->status)->getLabel()),
             ])
             ->filters([
                 TrashedFilter::make()
@@ -53,13 +56,16 @@ class ClassroomsTable
                 EditAction::make(),
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
-                RestoreAction::make(),
+                ClassroomResource::restoreAction(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->before(function (RestoreBulkAction $action): void {
+                            ClassroomResource::restoreBulkActionBefore($action);
+                        }),
                 ]),
             ]);
     }

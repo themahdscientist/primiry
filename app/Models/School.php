@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[Fillable(['name', 'code', 'settings', 'status'])]
 class School extends Model
 {
+    use SoftDeletes;
+
     protected function casts(): array
     {
         return [
@@ -15,8 +21,13 @@ class School extends Model
         ];
     }
 
-    public function owner(): BelongsTo
+    public function users(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'owner_user_id');
+        return $this->belongsToMany(User::class);
+    }
+
+    public function classrooms(): HasMany
+    {
+        return $this->hasMany(Classroom::class);
     }
 }

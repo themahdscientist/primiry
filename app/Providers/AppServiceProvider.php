@@ -52,6 +52,6 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(
             app()->isProduction(),
         );
-        // Model::unguard();
+
     }
 }

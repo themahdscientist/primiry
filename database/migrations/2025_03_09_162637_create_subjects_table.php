@@ -15,9 +15,10 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->unique();
             $table->text('description')->nullable();
-            $table->enum('type', ['theory', 'practical', 'viva']);
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->enum('type', ['theory', 'practical', 'viva'])->default('theory');
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

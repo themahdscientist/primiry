@@ -15,7 +15,7 @@ enum SubjectType: string implements HasLabel
         return match ($this) {
             self::Theory => 'Theory',
             self::Practical => 'Practical',
-            self::Viva => 'Viva [oral]',
+            self::Viva => 'Viva (oral)',
         };
     }
 }

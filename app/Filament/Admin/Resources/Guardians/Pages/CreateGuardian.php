@@ -14,24 +14,25 @@ class CreateGuardian extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $record = parent::handleRecordCreation(Arr::except($data, 'guardian'));
+        $record = parent::handleRecordCreation(Arr::except($data, 'user'));
 
-        $record->role()->associate(Role::GUARDIAN)->save();
+        Role::find(Role::GUARDIAN)->users()->create($data['user'])->guardian()->save($record);
 
         return $record;
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['name'] = implode(' ', [$data['first_name'], $data['last_name']]);
+        $data['user']['name'] = trim(implode(' ', [
+            $data['user']['first_name'],
+            $data['user']['last_name'],
+        ]));
 
-        $data = Arr::except($data, ['first_name', 'last_name']);
+        $data['user'] = Arr::except($data['user'], [
+            'first_name',
+            'last_name',
+        ]);
 
         return $data;
-    }
-
-    protected function afterCreate(): void
-    {
-        $this->getRecord()->guardian()->create($this->form->getState()['guardian']);
     }
 }

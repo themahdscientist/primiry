@@ -115,8 +115,17 @@ class FilamentPanelServiceProvider extends ServiceProvider
             }
 
             $field
-                ->live(debounce: 300)
-                ->afterStateUpdated(fn (BasePage $livewire, Field $component) => $livewire->validateOnly($component->getStatePath()));
+                ->live(
+                    debounce: 300,
+                    condition: fn (Field $component): bool => ! ($component instanceof TextInput && $component->getType() === 'password'),
+                )
+                ->afterStateUpdated(function (BasePage $livewire, Field $component): void {
+                    if ($component instanceof TextInput && $component->getType() === 'password') {
+                        return;
+                    }
+
+                    $livewire->validateOnly($component->getStatePath());
+                });
         });
     }
 }

@@ -14,24 +14,25 @@ class CreateStaff extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $record = parent::handleRecordCreation(Arr::except($data, 'staff'));
+        $record = parent::handleRecordCreation(Arr::except($data, 'user'));
 
-        $record->role()->associate(Role::STAFF)->save();
+        Role::find(Role::STAFF)->users()->create($data['user'])->staff()->save($record);
 
         return $record;
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['name'] = implode(' ', [$data['first_name'], $data['last_name']]);
+        $data['user']['name'] = trim(implode(' ', [
+            $data['user']['first_name'],
+            $data['user']['last_name'],
+        ]));
 
-        $data = Arr::except($data, ['first_name', 'last_name']);
+        $data['user'] = Arr::except($data['user'], [
+            'first_name',
+            'last_name',
+        ]);
 
         return $data;
-    }
-
-    protected function afterCreate(): void
-    {
-        $this->getRecord()->staff()->create($this->form->getState()['staff']);
     }
 }

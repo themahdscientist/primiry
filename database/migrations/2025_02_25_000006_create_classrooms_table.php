@@ -23,9 +23,10 @@ return new class extends Migration
             $table->foreignIdFor(Grade::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Section::class)->constrained()->cascadeOnDelete();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
+            $table->unique(['school_id', 'grade_id', 'section_id', 'status']);
         });
     }
 

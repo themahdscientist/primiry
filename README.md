@@ -11,6 +11,7 @@
 - try putting fields that can't be modified or should be extracted to the side  at the sidebar schema. it'll look more aesthetically pleasing.
 - add the nin field for students but it's optional
 <!-- todo:unresolved -->
+- the trashed filter on the table is causing the resource pages to crash w the error:  
 - you can add clauses to the unique validation method to have the same NIN in more than one record for as long as their roles are different. this is handled programmatically. the unique method in the database schema doesn't support that, or does it? ask gpt. [update: why will i want this? ask AI]
 - look for another icon set that greatly compliments heroicons.
 - students should log into their portal using their admission number.

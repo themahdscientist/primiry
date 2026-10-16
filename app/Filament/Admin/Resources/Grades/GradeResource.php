@@ -50,7 +50,6 @@ class GradeResource extends Resource
             'index' => ListGrades::route('/'),
             'create' => CreateGrade::route('/create'),
             'edit' => EditGrade::route('/{record}/edit'),
-            'subjects' => AssignSubjects::route('/assign-subjects'),
         ];
     }
 
@@ -65,9 +64,6 @@ class GradeResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ])
             ->with('yearHead.user');
     }
 }

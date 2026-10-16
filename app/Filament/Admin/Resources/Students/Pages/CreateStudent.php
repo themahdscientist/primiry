@@ -14,30 +14,27 @@ class CreateStudent extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $record = parent::handleRecordCreation(Arr::except($data, 'student'));
+        $record = parent::handleRecordCreation(Arr::except($data, 'user'));
 
-        $record->role()->associate(Role::STUDENT)->save();
+        Role::find(Role::STUDENT)->users()->create($data['user'])->student()->save($record);
 
         return $record;
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $parts = array_filter([
-            $data['first_name'] ?? null,
-            $data['middle_name'] ?? null,
-            $data['last_name'] ?? null,
-        ], fn ($v) => $v !== null && trim((string) $v) !== '');
+        $data['user']['name'] = trim(implode(' ', [
+            $data['user']['first_name'],
+            $data['user']['middle_name'],
+            $data['user']['last_name'],
+        ]));
 
-        $data['name'] = implode(' ', $parts);
-
-        $data = Arr::except($data, ['first_name', 'middle_name', 'last_name']);
+        $data['user'] = Arr::except($data['user'], [
+            'first_name',
+            'middle_name',
+            'last_name',
+        ]);
 
         return $data;
-    }
-
-    protected function afterCreate(): void
-    {
-        $this->getRecord()->student()->create($this->form->getState()['student']);
     }
 }

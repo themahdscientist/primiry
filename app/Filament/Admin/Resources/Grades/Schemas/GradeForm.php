@@ -10,6 +10,7 @@ use App\Enums\MeetingMethods;
 use App\Models\Grade;
 use App\Models\Role;
 use App\Models\Staff;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -37,7 +38,7 @@ class GradeForm
                                 ->required()
                                 ->native(false)
                                 ->unique(Grade::class, 'name')
-                                ->afterStateUpdated(fn (mixed $state, Set $set): mixed => static::getGradeAgeRange($state, $set)),
+                                ->afterStateUpdated(fn(mixed $state, Set $set): mixed => static::getGradeAgeRange($state, $set)),
                             Select::make('age_range')
                                 ->options(AgeRange::class)
                                 ->required()
@@ -51,19 +52,10 @@ class GradeForm
                                 ->native(false),
                             Select::make('year_head_id')
                                 ->label(__('Year head'))
-                                ->relationship('yearHead', 'id', function (Builder $query, ?Grade $record) {
-                                    if ($record?->year_head_id) {
-                                        $query->where('staff.id', '!=', $record->year_head_id);
-                                    }
-
-                                    return $query
-                                        ->whereHas('user', fn (Builder $q) => $q->where('role_id', Role::STAFF))
-                                        ->with('user');
-                                })
-                                ->getOptionLabelFromRecordUsing(fn (Staff $record) => $record->user->name)
-                                ->getOptionLabelUsing(fn (?Grade $record, mixed $state) => $record?->yearHead->user->name ?? $state)
-                                ->preload()
-                                ->searchable(),
+                                ->relationship('yearHead', 'id')
+                                ->getOptionLabelFromRecordUsing(fn(Staff $record) => $record->user->name)
+                                ->searchable()
+                                ->preload(),
                             DatePicker::make('start_date')
                                 ->label('Start date')
                                 ->required()
@@ -85,6 +77,14 @@ class GradeForm
                                 ->options(MeetingMethods::class)
                                 ->required()
                                 ->native(false),
+                            // this does not assign the tenant id to the pivot table. fix this.
+                            CheckboxList::make('subjects')
+                                ->relationship(titleAttribute: 'name')
+                            ->searchable()
+                                ->live(condition: false)
+                                ->columns(3)
+                            ->bulkToggleable()
+                                ->columnSpanFull(),
                         ]),
                 ], [
                     Section::make([

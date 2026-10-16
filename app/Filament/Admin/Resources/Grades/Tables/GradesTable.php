@@ -36,9 +36,9 @@ class GradesTable
                     ->searchable()
                     ->placeholder('-')
                     ->emptyTooltip('A year head hasn\'t been assigned yet.')
-                    ->url(fn (Grade $record) => $record->yearHead->user ? StaffResource::getUrl('view', [$record->yearHead->user]) : null),
+                    ->url(fn (Grade $record) => $record->yearHead ? StaffResource::getUrl('view', [$record->yearHead]) : null),
                 TextColumn::make('subjects_count')
-                    ->label('No. of Subjects')
+                    ->label('Subjects')
                     ->counts('subjects'),
                 TextColumn::make('start_date')
                     ->dateTime()

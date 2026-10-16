@@ -15,13 +15,12 @@ return new class extends Migration
     {
         Schema::create('guardians', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
+            $table->string('code')->unique();
             $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->default('single');
             $table->string('occupation')->nullable();
 
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
-            $table->unique(['school_id', 'code']);
+            $table->foreignIdFor(User::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps(6);
             $table->softDeletes(precision: 6);
         });

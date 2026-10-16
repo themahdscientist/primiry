@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('trial_ends_at', 6)->nullable();
             $table->string('type');
 
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->unique(['school_id', 'subscription_code']);
             $table->timestamps(6);
             $table->softDeletes(precision: 6);

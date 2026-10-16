@@ -15,9 +15,6 @@ class ListGrades extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('assignSubjects')
-                ->color(Color::Stone)
-                ->url(AssignSubjects::getUrl()),
             CreateAction::make(),
         ];
     }

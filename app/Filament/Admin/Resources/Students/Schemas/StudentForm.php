@@ -8,6 +8,7 @@ use App\Enums\RhesusFactor;
 use App\Enums\Sex;
 use App\Enums\StudentStatus;
 use App\Enums\StudentType;
+use App\Filament\Admin\Resources\Guardians\Schemas\GuardianForm;
 use App\Models\Guardian;
 use App\Models\Role;
 use App\Models\Student;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Operation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Unique;
 use Nette\Utils\Random;
@@ -42,158 +44,154 @@ class StudentForm
                         ->columnSpanFull()
                         ->schema([
                             Section::make([
-                                TextInput::make('first_name')
+                                TextInput::make('user.first_name')
                                     ->required()
                                     ->maxLength(85)
                                     ->autofocus(),
-                                TextInput::make('middle_name')
-                                    ->required()
+                                TextInput::make('user.middle_name')
                                     ->maxLength(85),
-                                TextInput::make('last_name')
+                                TextInput::make('user.last_name')
                                     ->required()
                                     ->maxLength(85),
                             ]),
                             Section::make([
-                                TextInput::make('email')
+                                TextInput::make('user.email')
                                     ->email()
                                     ->label(__('resources/pages/create-record.form.email.label'))
                                     ->maxLength(255)
-                                    ->unique(User::class, 'email'),
-                                PhoneInput::make('phone')
+                                    ->scopedUnique(User::class, 'email', fn(?Student $record): ?User => $record?->user),
+                                PhoneInput::make('user.phone')
                                     ->label(__('resources/pages/create-record.form.phone.label'))
                                     ->prefixIcon('heroicon-s-phone')
-                                    ->defaultCountry(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->defaultCountry(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->autoPlaceholder('aggressive')
                                     ->strictMode()
                                     ->required(),
-                                Select::make('sex')
+                                Select::make('user.sex')
                                     ->options(Sex::class)
                                     ->required()
                                     ->native(false),
                             ]),
                             Section::make([
-                                PhoneInput::make('student.emergency_contact')
+                                PhoneInput::make('emergency_contact')
                                     ->label(__('resources/pages/create-student.form.emergency-contact.label'))
                                     ->prefixIcon('heroicon-s-phone')
-                                    ->defaultCountry(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->defaultCountry(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->autoPlaceholder('aggressive')
                                     ->strictMode()
                                     ->required(),
-                                Select::make('student.blood_group')
+                                Select::make('blood_group')
                                     ->label(__('Blood group'))
                                     ->options(BloodGroup::class)
                                     ->required()
                                     ->native(false),
-                                Select::make('student.rhesus_factor')
+                                Select::make('rhesus_factor')
                                     ->label(__('Rhesus factor'))
                                     ->options(RhesusFactor::class)
                                     ->required()
                                     ->native(false),
                             ]),
                             Section::make([
-                                DatePicker::make('student.dob')
+                                DatePicker::make('dob')
                                     ->label(__('resources/pages/create-student.form.dob.label'))
                                     ->required()
                                     ->native(false),
-                                Select::make('student.religion')
+                                Select::make('religion')
                                     ->label(__('Religion'))
                                     ->options(Religion::class)
                                     ->required()
                                     ->native(false),
-                                Select::make('student.type')
+                                Select::make('type')
                                     ->label(__('Type'))
                                     ->options(StudentType::class)
                                     ->required()
                                     ->native(false),
                             ]),
                             Section::make([
-                                Select::make('student.nationality')
+                                Select::make('nationality')
                                     ->label(__('Nationality'))
-                                    ->relationship('student.nationalityy', 'name')
-                                    ->default(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->relationship('countryOfOrigin', 'name')
+                                    ->default(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->searchable()
                                     ->preload()
                                     ->required()
                                     ->afterStateUpdated(function (Set $set) {
-                                        $set('student.state_of_origin', null);
+                                        $set('state_of_origin', null);
                                     }),
-                                Select::make('student.state_of_origin')
+                                Select::make('state_of_origin')
                                     ->label(__('resources/pages/create-student.form.state-of-origin.label'))
-                                    ->disabled(fn (Get $get): bool => ! $get('student.nationality'))
-                                    ->relationship('student.stateOfOrigin', 'name', fn (Builder $query, Get $get) => $query->where('country_iso2', $get('student.nationality')))
-                                    ->default(fn () => filament()->auth()->user()->getDefaultState())
+                                    ->disabled(fn(Get $get): bool => !$get('nationality'))
+                                    ->relationship('stateOfOrigin', 'name', fn(Builder $query, Get $get) => $query->where('country_iso2', $get('nationality')))
+                                    ->default(fn() => filament()->getTenant()->settings['address']['state_code'])
                                     ->searchable()
                                     ->preload()
                                     ->required(),
-                                TextInput::make('student.lga_of_origin')
+                                TextInput::make('lga_of_origin')
                                     ->label(__('resources/pages/create-student.form.lga-of-origin.label'))
                                     ->required()
                                     ->maxLength(255),
                             ]),
                             Section::make([
-                                Select::make('student.country_of_residence')
+                                Select::make('country_of_residence')
                                     ->label(__('resources/pages/create-student.form.country-of-residence.label'))
-                                    ->relationship('student.countryOfResidence', 'name')
-                                    ->default(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->relationship('countryOfResidence', 'name')
+                                    ->default(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->searchable()
                                     ->preload()
                                     ->required()
                                     ->afterStateUpdated(function (Set $set) {
-                                        $set('student.state_of_residence', null);
+                                        $set('state_of_residence', null);
                                     }),
-                                Select::make('student.state_of_residence')
+                                Select::make('state_of_residence')
                                     ->label(__('resources/pages/create-student.form.state-of-residence.label'))
-                                    ->disabled(fn (Get $get): bool => ! $get('student.country_of_residence'))
-                                    ->relationship('student.stateOfResidence', 'name', fn (Builder $query, Get $get) => $query->where('country_iso2', $get('student.country_of_residence')))
-                                    ->default(fn () => filament()->auth()->user()->getDefaultState())
+                                    ->disabled(fn(Get $get): bool => !$get('country_of_residence'))
+                                    ->relationship('stateOfResidence', 'name', fn(Builder $query, Get $get) => $query->where('country_iso2', $get('country_of_residence')))
+                                    ->default(fn() => filament()->getTenant()->settings['address']['state_code'])
                                     ->searchable()
                                     ->preload()
                                     ->required(),
-                                TextInput::make('student.city_of_residence')
+                                TextInput::make('city_of_residence')
                                     ->label(__('resources/pages/create-student.form.city-of-residence.label'))
                                     ->required()
                                     ->maxLength(255),
                             ]),
                             Section::make([
-                                Select::make('student.status')
+                                Select::make('status')
                                     ->label(__('Status'))
                                     ->options(StudentStatus::class)
                                     ->native(false)
                                     ->required(),
-                                Select::make('student.classroom_id')
+                                Select::make('classroom_id')
                                     ->label(__('Classroom'))
-                                    ->relationship('student.classroom', 'name')
+                                    ->relationship('classroom', 'name')
                                     ->searchable()
                                     ->preload()
                                     ->required(),
-                                Select::make('student.guardian_id')
+                                Select::make('guardian_id')
                                     ->label(__('Guardian'))
-                                    ->relationship('student.guardian', 'id', function (Builder $query) {
-                                        return $query
-                                            ->whereHas('user', fn (Builder $q) => $q->where('role_id', Role::GUARDIAN))
-                                            ->with('user');
-                                    })
-                                    ->getOptionLabelFromRecordUsing(fn (Guardian $record) => $record->user->name)
+                                    ->relationship('guardian', 'id')
+                                    ->getOptionLabelFromRecordUsing(fn(Guardian $record) => $record->user->name)
                                     ->searchable()
                                     ->preload()
                                     ->required(),
+                                // consider having a createoptionform here,
                             ]),
                             Section::make([
-                                TextInput::make('student.admission_number')
-                                    ->default(fn () => strtoupper(Random::generate()))
+                                TextInput::make('admission_number')
+                                    ->default(fn() => strtoupper(Random::generate()))
                                     ->disabled()
-                                    ->dehydrated(fn (string $operation): bool => $operation === 'create')
-                                    ->dehydrateStateUsing(fn (string $state): string => strtolower($state))
-                                    ->formatStateUsing(fn (string $state): string => strtoupper($state))
-                                    ->unique(Student::class, 'admission_number', modifyRuleUsing: fn (Unique $rule, ?User $record) => $rule->ignore($record?->id, 'user_id'))
+                                    ->dehydrated(fn(string $operation): bool => $operation === Operation::Create->value)
+                                    ->dehydrateStateUsing(fn(string $state): string => strtolower($state))
+                                    ->formatStateUsing(fn(string $state): string => strtoupper($state))
+                                    ->scopedUnique()
                                     ->required(),
-                                TextInput::make('nin')
+                                TextInput::make('user.nin')
                                     ->label(__('NIN'))
                                     ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
                                     ->hintIconTooltip(__('National Identification Number (11 digits)'))
                                     ->length(11)
                                     ->numeric()
-                                    ->unique(User::class, 'nin')
+                                    ->scopedUnique(User::class, 'nin', fn(?Student $record): ?User => $record?->user)
                                     ->extraInputAttributes([
                                         'inputmode' => 'numeric',
                                         'pattern' => '[0-9]*',
@@ -201,7 +199,7 @@ class StudentForm
                                     ->validationAttribute('NIN')
                                     ->validationMessages(['unique' => 'This :attribute belongs to another.'])
                                     ->afterStateUpdated(
-                                        fn ($state, $get) => null// verify nin
+                                        fn($state, $get) => null// verify nin
                                     )
                                     ->suffixAction(
                                         Action::make('verify')
@@ -209,7 +207,7 @@ class StudentForm
                                             ->iconButton()
                                             ->tooltip('Verify NIN')
                                             ->action(
-                                                fn ($state, $get) => static::verifyNIN($state, $get)
+                                                fn($state, $get) => static::verifyNIN($state, $get)
                                             )
                                     ),
                             ]),
@@ -219,14 +217,14 @@ class StudentForm
                     Section::make([
                         CreatedAt::make('Admitted'),
                         Timestamp::make('created_at', 'Graduated')
-                            ->state(fn (?User $record) => $record?->student->graduated_at ? $record?->student->graduated_at->diffForHumans() : '-'),
+                            ->state(fn(?Student $record) => $record?->graduated_at ? $record?->graduated_at->diffForHumans() : '-'),
                         DeletedAt::make('Expelled/Left'),
                     ])
                         ->columnSpanFull(),
                     Section::make([
-                        FileUpload::make('avatar')
+                        FileUpload::make('user.avatar')
                             ->image()
-                            ->previewable(fn (string $operation) => $operation === 'edit' || $operation === 'view')
+                            ->previewable(fn(string $operation) => $operation === 'edit' || $operation === 'view')
                             ->label(__('resources/pages/create-record.form.avatar.label'))
                             ->hintIcon(__('resources/pages/create-record.form.avatar.icon.name'))
                             ->hintIconTooltip(__('resources/pages/create-record.form.avatar.icon.text'))
@@ -237,7 +235,7 @@ class StudentForm
                             ->fetchFileInformation(true)
                             ->maxSize(1024)
                             ->maxFiles(1)
-                            ->dehydrated(fn ($state) => $state != null),
+                            ->dehydrated(fn($state) => $state != null),
                     ])
                         ->columnSpanFull(),
                 ])

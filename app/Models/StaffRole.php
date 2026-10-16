@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Sushi\Sushi;
 
+#[Fillable([])]
 class StaffRole extends Model
 {
     use Sushi;
@@ -33,9 +35,9 @@ class StaffRole extends Model
         return $this->hasMany(Staff::class);
     }
 
-    const TEACHING = 1;
+    public const int TEACHING = 1;
 
-    const NON_TEACHING = 2;
+    public const int NON_TEACHING = 2;
 
-    const ADMINISTRATIVE = 3;
+    public const int ADMINISTRATIVE = 3;
 }

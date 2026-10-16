@@ -2,13 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Grade extends Trackable
+#[Fillable(['name', 'age_range', 'assessment_methods', 'description', 'end_date', 'meeting_methods', 'year_head_id', 'start_date', 'status'])]
+class Grade extends Model
 {
+    use SoftDeletes;
+
     protected function casts(): array
     {
         return [
@@ -46,5 +52,10 @@ class Grade extends Trackable
     public function yearHead(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'year_head_id');
+    }
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Enums\Sex;
 use App\Models\Guardian;
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Operation;
 use Illuminate\Validation\Rules\Unique;
 use Nette\Utils\Random;
 use RalphJSmit\Filament\Components\Forms\CreatedAt;
@@ -33,20 +35,20 @@ class GuardianForm
                         ->columnSpanFull()
                         ->schema([
                             Section::make([
-                                TextInput::make('first_name')
+                                TextInput::make('user.first_name')
                                     ->required()
                                     ->maxLength(85)
                                     ->autofocus(),
-                                TextInput::make('last_name')
+                                TextInput::make('user.last_name')
                                     ->required()
                                     ->maxLength(85),
-                                TextInput::make('nin')
+                                TextInput::make('user.nin')
                                     ->label(__('NIN'))
                                     ->hintIcon(__('resources/pages/create-record.hint-icon.name'))
                                     ->hintIconTooltip(__('National Identification Number (11 digits)'))
                                     ->length(11)
                                     ->numeric()
-                                    ->unique(User::class, 'nin')
+                                    ->scopedUnique(User::class, 'nin', fn(?Guardian $record): ?User => $record?->user)
                                     ->extraInputAttributes([
                                         'inputmode' => 'numeric',
                                         'pattern' => '[0-9]*',
@@ -55,7 +57,7 @@ class GuardianForm
                                     ->validationMessages(['unique' => 'This :attribute belongs to another.'])
                                     ->required()
                                     ->afterStateUpdated(
-                                        fn ($state, $get) => null// verify nin
+                                        fn($state, $get) => null// verify nin
                                     )
                                     ->suffixAction(
                                         Action::make('verify')
@@ -63,43 +65,43 @@ class GuardianForm
                                             ->iconButton()
                                             ->tooltip('Verify NIN')
                                             ->action(
-                                                fn ($state, $get) => static::verifyNIN($state, $get)
+                                                fn($state, $get) => static::verifyNIN($state, $get)
                                             )
                                     ),
                             ]),
                             Section::make([
-                                TextInput::make('email')
+                                TextInput::make('user.email')
                                     ->email()
                                     ->label(__('resources/pages/create-record.form.email.label'))
                                     ->required()
                                     ->maxLength(255)
-                                    ->unique(User::class, 'email'),
-                                PhoneInput::make('phone')
+                                    ->scopedUnique(User::class, 'email', fn(?Guardian $record): ?User => $record?->user),
+                                PhoneInput::make('user.phone')
                                     ->label(__('resources/pages/create-record.form.phone.label'))
                                     ->prefixIcon('heroicon-s-phone')
-                                    ->defaultCountry(fn () => filament()->auth()->user()->getDefaultCountry())
+                                    ->defaultCountry(fn() => filament()->getTenant()->settings['address']['country_iso2'])
                                     ->autoPlaceholder('aggressive')
                                     ->strictMode()
                                     ->required(),
-                                Select::make('sex')
+                                Select::make('user.sex')
                                     ->options(Sex::class)
                                     ->required()
                                     ->native(false),
                             ]),
                             Section::make([
-                                TextInput::make('guardian.code')
-                                    ->default(fn () => strtoupper(Random::generate()))
+                                TextInput::make('code')
+                                    ->default(fn() => strtoupper(Random::generate()))
                                     ->disabled()
-                                    ->dehydrated(fn (string $operation): bool => $operation === 'create')
-                                    ->dehydrateStateUsing(fn (string $state): string => strtolower($state))
-                                    ->formatStateUsing(fn (string $state): string => strtoupper($state))
-                                    ->unique(Guardian::class, 'code', modifyRuleUsing: fn (Unique $rule, ?User $record) => $rule->ignore($record?->id, 'user_id'))
+                                    ->dehydrated(fn(string $operation): bool => $operation === Operation::Create->value)
+                                    ->dehydrateStateUsing(fn(string $state): string => strtolower($state))
+                                    ->formatStateUsing(fn(string $state): string => strtoupper($state))
+                                    ->scopedUnique()
                                     ->required(),
-                                Select::make('guardian.marital_status')
+                                Select::make('marital_status')
                                     ->options(MaritalStatus::class)
                                     ->required()
                                     ->native(false),
-                                TextInput::make('guardian.occupation')
+                                TextInput::make('occupation')
                                     ->required(),
                             ])
                                 ->columnSpanFull(),
@@ -111,20 +113,20 @@ class GuardianForm
                     ])
                         ->columnSpanFull(),
                     Section::make([
-                        FileUpload::make('avatar')
+                        FileUpload::make('user.avatar')
                             ->image()
-                            ->previewable(fn (string $operation) => $operation === 'edit' || $operation === 'view')
+                            ->previewable(fn(string $operation) => $operation === 'edit' || $operation === 'view')
                             ->label(__('resources/pages/create-record.form.avatar.label'))
                             ->hintIcon(__('resources/pages/create-record.form.avatar.icon.name'))
                             ->hintIconTooltip(__('resources/pages/create-record.form.avatar.icon.text'))
                             ->disk('public')
                             ->directory('guardians')
                             ->visibility('public')
-                            ->storeFileNamesIn('original_avatar')
-                            ->fetchFileInformation(true)
+                            ->storeFileNamesIn('user.original_avatar')
+                            ->fetchFileInformation()
                             ->maxSize(1024)
                             ->maxFiles(1)
-                            ->dehydrated(fn ($state) => $state != null),
+                            ->dehydrated(fn($state) => $state != null),
                     ])
                         ->columnSpanFull(),
                 ])

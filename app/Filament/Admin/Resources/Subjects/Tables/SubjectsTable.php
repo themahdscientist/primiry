@@ -25,9 +25,11 @@ class SubjectsTable
                     ->rowIndex(),
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('description'),
+                TextColumn::make('code')
+                    ->searchable(),
                 TextColumn::make('type')
                     ->badge(),
+                TextColumn::make('description'),
             ])
             ->filters([
                 TrashedFilter::make()

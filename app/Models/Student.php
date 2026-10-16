@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[Fillable(['admission_number', 'blood_group', 'city_of_residence', 'classroom_id', 'country_of_residence', 'dob', 'emergency_contact', 'guardian_id', 'lga_of_origin', 'nationality', 'religion', 'rhesus_factor', 'state_of_residence', 'state_of_origin', 'status', 'type', 'graduated_at'])]
 class Student extends Model
 {
+    use SoftDeletes;
+
     public function classroom(): BelongsTo
     {
         return $this->belongsTo(Classroom::class);
@@ -22,8 +27,7 @@ class Student extends Model
         return $this->belongsTo(State::class, 'state_of_residence', 'state_code');
     }
 
-    // you can't have a function and model attribute share the same name, hence => nationalityy.
-    public function nationalityy(): BelongsTo
+    public function countryOfOrigin(): BelongsTo
     {
         return $this->belongsTo(Country::class, 'nationality', 'iso2');
     }
@@ -41,5 +45,10 @@ class Student extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 }
