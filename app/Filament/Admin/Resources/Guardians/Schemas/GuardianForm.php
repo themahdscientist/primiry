@@ -115,7 +115,7 @@ class GuardianForm
                     Section::make([
                         FileUpload::make('user.avatar')
                             ->image()
-                            ->previewable(fn(string $operation) => $operation === 'edit' || $operation === 'view')
+                            ->previewable(fn(string $operation): bool => $operation === Operation::Edit->value || $operation === Operation::View->value)
                             ->label(__('resources/pages/create-record.form.avatar.label'))
                             ->hintIcon(__('resources/pages/create-record.form.avatar.icon.name'))
                             ->hintIconTooltip(__('resources/pages/create-record.form.avatar.icon.text'))

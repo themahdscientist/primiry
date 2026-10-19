@@ -17,9 +17,6 @@ class ExamForm
                     ->required(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
-                Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required(),
             ]);
     }
 }

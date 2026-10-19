@@ -13,7 +13,7 @@ class Guardian extends Model
 {
     use SoftDeletes;
 
-    public function students(): HasMany
+    public function wards(): HasMany
     {
         return $this->hasMany(Student::class);
     }

@@ -11,17 +11,19 @@ use Sushi\Sushi;
 class Day extends Model
 {
     use Sushi;
-
-    protected $keyType = 'string';
+    protected $schema = [
+        'id' => 'int',
+        'name' => 'string',
+    ];
 
     protected $rows = [
-        ['id' => self::SUNDAY, 'name' => 'sunday'],
-        ['id' => self::MONDAY, 'name' => 'monday'],
-        ['id' => self::TUESDAY, 'name' => 'tuesday'],
-        ['id' => self::WEDNESDAY, 'name' => 'wednesday'],
-        ['id' => self::THURSDAY, 'name' => 'thursday'],
-        ['id' => self::FRIDAY, 'name' => 'friday'],
-        ['id' => self::SATURDAY, 'name' => 'saturday'],
+        ['id' => self::SUNDAY, 'name' => 'Sunday'],
+        ['id' => self::MONDAY, 'name' => 'Monday'],
+        ['id' => self::TUESDAY, 'name' => 'Tuesday'],
+        ['id' => self::WEDNESDAY, 'name' => 'Wednesday'],
+        ['id' => self::THURSDAY, 'name' => 'Thursday'],
+        ['id' => self::FRIDAY, 'name' => 'Friday'],
+        ['id' => self::SATURDAY, 'name' => 'Saturday'],
     ];
 
     public const int SUNDAY = 1;
@@ -37,9 +39,4 @@ class Day extends Model
     public const int FRIDAY = 6;
 
     public const int SATURDAY = 7;
-
-    public function timetables(): HasMany
-    {
-        return $this->hasMany(Timetable::class);
-    }
 }

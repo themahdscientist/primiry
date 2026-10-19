@@ -48,6 +48,9 @@ class GuardiansTable
                 PhoneColumn::make('user.phone')
                     ->label('Phone')
                     ->searchable(),
+                    TextColumn::make('wards_count')
+                ->label('Wards')
+                    ->counts('wards'),
                 TextColumn::make('user.nin')
                     ->label('NIN')
                     ->searchable(),

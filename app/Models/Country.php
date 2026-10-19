@@ -13,6 +13,10 @@ class Country extends Model
 {
     use Sushi;
 
+    protected $primaryKey = 'iso2';
+
+    public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $schema = [
@@ -48,7 +52,7 @@ class Country extends Model
 
     protected function afterMigrate(Blueprint $table)
     {
-        $table->index(['name', 'iso2', 'iso3']);
+        $table->index(['name', 'iso2', 'iso3', 'capital', 'currency', 'currency_symbol']);
     }
 
     protected function sushiShouldCache()
